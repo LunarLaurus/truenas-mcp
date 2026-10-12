@@ -233,3 +233,18 @@ func TestServerEchoedKeyIsScrubbed(t *testing.T) {
 		t.Errorf("expected scrubbed error message, got: %s", authErr)
 	}
 }
+
+func TestStripNullIdentifiers(t *testing.T) {
+	withNull := map[string]interface{}{"name": "arcsize", "identifier": nil}
+	withValue := map[string]interface{}{"name": "disk", "identifier": "sda"}
+	params := []interface{}{[]interface{}{withNull, withValue}, map[string]interface{}{"unit": "HOUR"}}
+
+	stripNullIdentifiers(params)
+
+	if _, present := withNull["identifier"]; present {
+		t.Errorf("null identifier should be removed, got %v", withNull)
+	}
+	if withValue["identifier"] != "sda" {
+		t.Errorf("non-null identifier must be kept, got %v", withValue)
+	}
+}
