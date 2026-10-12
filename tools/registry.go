@@ -35,6 +35,7 @@ func NewRegistry(client *truenas.Client, taskManager *tasks.Manager) *Registry {
 
 func (r *Registry) registerTools() {
 	// System info tool
+	registerLocalDiskTools(r) // local addition: read-only disk inventory
 	r.tools["system_info"] = Tool{
 		Definition: mcp.Tool{
 			Name:        "system_info",
@@ -1069,6 +1070,7 @@ For IPA: {hostname: "ipa.example.com", domain: "example.com", ...}
 						"description": "Metric type: disk I/O or disk temperature (default: disk)",
 						"default":     "disk",
 					},
+					"full_series": map[string]interface{}{"type": "boolean", "description": "Return every data point instead of first/last 10 (local patch)"},
 					"unit": map[string]interface{}{
 						"type":        "string",
 						"enum":        []string{"HOUR", "DAY", "WEEK", "MONTH", "YEAR"},
@@ -3143,7 +3145,10 @@ func handleGetDiskMetrics(client *truenas.Client, args map[string]interface{}) (
 					// Include sample: first 10 and last 10 data points
 					if dataArray, ok := value.([]interface{}); ok {
 						summary["data_points_total"] = len(dataArray)
-						if len(dataArray) > 0 {
+						// Local patch: full_series=true returns every sample (read-only).
+						if full, _ := args["full_series"].(bool); full {
+							summary["data"] = dataArray
+						} else if len(dataArray) > 0 {
 							sample := make([]interface{}, 0)
 
 							for i := 0; i < 10 && i < len(dataArray); i++ {
