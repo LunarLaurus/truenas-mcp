@@ -316,7 +316,30 @@ func (c *Client) Call(method string, params ...interface{}) (json.RawMessage, er
 		}
 	}
 
+	if method == "reporting.get_data" {
+		stripNullIdentifiers(params)
+	}
+
 	return c.callRaw(method, params...)
+}
+
+// stripNullIdentifiers removes "identifier": null from reporting.get_data
+// query objects in place. TrueNAS 25.10 rejects a null identifier with a
+// validation error; graphs without an identifier (ARC, CPU) must omit the key.
+func stripNullIdentifiers(params []interface{}) {
+	for _, p := range params {
+		list, ok := p.([]interface{})
+		if !ok {
+			continue
+		}
+		for _, item := range list {
+			if m, ok := item.(map[string]interface{}); ok {
+				if v, present := m["identifier"]; present && v == nil {
+					delete(m, "identifier")
+				}
+			}
+		}
+	}
 }
 
 // sensitiveKeyFragments match JSON object keys whose values must never be
