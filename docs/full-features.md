@@ -46,6 +46,8 @@ This document provides a comprehensive list of all available MCP tools for TrueN
 - **get_system_metrics** - Get CPU, memory, and load performance metrics
 - **get_network_metrics** - Get network interface traffic metrics
 - **get_disk_metrics** - Get disk I/O performance metrics
+  - `full_series: true` returns every data point instead of the first and last 10 samples
+- **query_disks** - Read-only disk inventory from `disk.query`: name, model, serial, size, type, bus and pool membership
 
 ### Applications
 - **query_apps** - List installed applications with status and available updates
