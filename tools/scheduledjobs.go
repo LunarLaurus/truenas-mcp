@@ -93,6 +93,16 @@ func handleQueryScheduledJobs(client *truenas.Client, args map[string]interface{
 		"cron_jobs":    summarizeCronJobs(cron),
 		"replications": summarizeReplications(replication),
 	}
+	if rsync, problem := optionalClientList(client, "rsynctask.query"); problem != "" {
+		response["rsync_tasks"] = "unavailable: " + problem
+	} else {
+		response["rsync_tasks"] = summarizeRsyncTasks(rsync)
+	}
+	if cloud, problem := optionalClientList(client, "cloudsync.query"); problem != "" {
+		response["cloudsync_tasks"] = "unavailable: " + problem
+	} else {
+		response["cloudsync_tasks"] = summarizeCloudSyncTasks(cloud)
+	}
 	formatted, err := json.MarshalIndent(response, "", "  ")
 	if err != nil {
 		return "", fmt.Errorf("failed to format scheduled jobs: %w", err)
