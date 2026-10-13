@@ -54,6 +54,7 @@ This document provides a comprehensive list of all available MCP tools for TrueN
 - **query_services** - Read-only service status from `service.query` (role `SERVICE_READ`): state, start-on-boot flag and process count per service. `running_only` limits it to running services
 - **query_interfaces** - Read-only network interfaces from `interface.query`: type, MTU, link state and IP addresses per interface, sorted by name
 - **query_snapshot_tasks** - Read-only periodic snapshot tasks from `pool.snapshottask.query`: dataset, recursion, `minute hour dom month dow` schedule, retention and enabled state, for lining periodic I/O bursts up with snapshot schedules
+- **query_scheduled_jobs** - Read-only view of recurring jobs: cron jobs (`cronjob.query`) and replication tasks (`replication.query`) with their schedules. Cron commands and replication credentials are deliberately not returned
 
 ### Applications
 - **query_apps** - List installed applications with status and available updates
