@@ -2098,6 +2098,17 @@ func handleQueryDatasets(client *truenas.Client, args map[string]interface{}) (s
 	return string(formatted), nil
 }
 
+// datasetTuningFields maps the summary key to the pool.dataset.query property that holds it.
+var datasetTuningFields = map[string]string{
+	"recordsize":          "recordsize",
+	"volblocksize":         "volblocksize",
+	"sync":                 "sync",
+	"atime":                "atime",
+	"primarycache":         "primarycache",
+	"special_small_blocks": "special_small_block_size",
+	"copies":               "copies",
+}
+
 // simplifyDataset extracts the most relevant fields from a raw dataset object
 func simplifyDataset(ds map[string]interface{}) map[string]interface{} {
 	summary := map[string]interface{}{
@@ -2167,6 +2178,13 @@ func simplifyDataset(ds map[string]interface{}) map[string]interface{} {
 	if dedup := getParsed(ds["deduplication"]); dedup != nil {
 		if dedupStr, ok := dedup.(string); ok && dedupStr != "off" {
 			summary["deduplication"] = dedup
+		}
+	}
+
+	// I/O tuning properties (write-latency diagnosis: block size, sync policy, caching)
+	for key, field := range datasetTuningFields {
+		if val := getValue(ds[field]); val != nil {
+			summary[key] = val
 		}
 	}
 
