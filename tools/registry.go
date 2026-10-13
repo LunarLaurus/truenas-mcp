@@ -49,6 +49,7 @@ func (r *Registry) registerTools() {
 	registerPoolProcessTools(r)
 	registerPoolAttachmentTools(r)
 	registerDatasetQuotaTools(r)
+	registerCertificateTools(r)
 	r.tools["system_info"] = Tool{
 		Definition: mcp.Tool{
 			Name:        "system_info",
