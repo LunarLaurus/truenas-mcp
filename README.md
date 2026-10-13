@@ -269,6 +269,7 @@ You should now be able to ask TrueNAS questions:
 - `--tls-ca` - Path to a PEM certificate to trust, e.g. the TrueNAS self-signed certificate (or use `TRUENAS_TLS_CA` env var)
 - `TRUENAS_TLS_SERVER_NAME` env var - TLS server name to verify the certificate against. The stock TrueNAS certificate is issued to `localhost`, so when you pin it with `--tls-ca` and connect by another hostname, set this to `localhost`. Ignored with `--insecure`.
 - `--insecure` - Disable TLS certificate verification entirely (or set `TRUENAS_INSECURE=1`) - **unsafe**: allows man-in-the-middle attacks; prefer `--tls-ca`
+- `--read-only` - Hide and refuse every tool that changes state (or set `TRUENAS_READ_ONLY=1`). Mutating tools are listed in `mutatingTools` in `tools/readonly.go`; anything not listed there is treated as read-only. This is a second guard on top of the API key role, not a replacement for it.
 - `--debug` - Enable debug logging (or set `TRUENAS_MCP_DEBUG=1`)
 - `--version` - Print version and exit
 

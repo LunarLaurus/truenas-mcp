@@ -16,6 +16,7 @@ type Registry struct {
 	client      *truenas.Client
 	taskManager *tasks.Manager
 	tools       map[string]Tool
+	readOnly    bool
 }
 
 type Tool struct {
@@ -1763,7 +1764,10 @@ Returns task_id for tracking progress with tasks_get.
 
 func (r *Registry) ListTools() []mcp.Tool {
 	tools := make([]mcp.Tool, 0, len(r.tools))
-	for _, tool := range r.tools {
+	for name, tool := range r.tools {
+		if r.readOnly && mutatingTools[name] {
+			continue
+		}
 		tools = append(tools, tool.Definition)
 	}
 	return tools
@@ -1773,6 +1777,10 @@ func (r *Registry) CallTool(name string, args map[string]interface{}) (string, e
 	tool, exists := r.tools[name]
 	if !exists {
 		return "", fmt.Errorf("unknown tool: %s", name)
+	}
+
+	if err := r.refuseIfReadOnly(name); err != nil {
+		return "", err
 	}
 
 	return tool.Handler(r.client, args)
