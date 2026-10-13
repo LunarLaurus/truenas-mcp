@@ -17,7 +17,7 @@ func registerNFSStatusTools(r *Registry) {
 		Definition: mcp.Tool{
 			Name: "get_nfs_status",
 			Description: "Read-only NFS server status (role SHARING_NFS_READ): nfsd thread count, protocols, bind addresses, " +
-				"and the connected NFSv3 and NFSv4 clients (nfs.config, nfs.get_nfs3_clients, nfs.get_nfs4_clients). "+
+				"and the connected NFSv3 and NFSv4 clients (nfs.config, nfs.get_nfs3_clients, nfs.get_nfs4_clients). " +
 				"The client lists come from the server's mount records and can be incomplete: on one 25.10.1 system an export mounted by two hosts listed only one",
 			InputSchema: map[string]interface{}{
 				"type":       "object",
