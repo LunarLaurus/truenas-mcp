@@ -96,3 +96,34 @@ func TestSummarizeCertificatesAcceptsCtimeDatesAsReportedLive(t *testing.T) {
 		t.Errorf("days_left=%v expired=%v, want 9 and false", got[0]["days_left"], got[0]["expired"])
 	}
 }
+
+func TestSummarizeCertificatesKeepsTheCertificateID(t *testing.T) {
+	raw := []map[string]interface{}{{"id": float64(7), "name": "truenas_default", "until": "Thu Jan  1 00:00:00 2026"}}
+
+	got := summarizeCertificates(raw, time.Date(2026, 10, 13, 0, 0, 0, 0, time.UTC))
+
+	if got[0]["id"] != float64(7) {
+		t.Errorf("id = %v, want 7 so the UI certificate can be identified", got[0]["id"])
+	}
+}
+
+func TestParseUICertificateIDHandlesNumbersObjectsAndTheMaskedValue(t *testing.T) {
+	cases := []struct {
+		name   string
+		value  interface{}
+		wantID int
+		wantOK bool
+	}{
+		{"number", float64(3), 3, true},
+		{"object with id", map[string]interface{}{"id": float64(5)}, 5, true},
+		{"masked for the read-only role", "********", 0, false},
+		{"null", nil, 0, false},
+		{"object without id", map[string]interface{}{"name": "x"}, 0, false},
+	}
+	for _, tc := range cases {
+		id, ok := parseUICertificateID(tc.value)
+		if id != tc.wantID || ok != tc.wantOK {
+			t.Errorf("%s: parseUICertificateID(%v) = (%d, %v), want (%d, %v)", tc.name, tc.value, id, ok, tc.wantID, tc.wantOK)
+		}
+	}
+}

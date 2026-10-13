@@ -14,7 +14,7 @@ import (
 // certificateFields are the certificate.query fields passed through when present. Certificate, key and
 // CSR PEM material is never in this list.
 var certificateFields = []string{
-	"name", "cert_type", "common", "san", "from", "until", "key_type", "key_length", "digest_algorithm",
+	"id", "name", "cert_type", "common", "san", "from", "until", "key_type", "key_length", "digest_algorithm",
 }
 
 // certificateTimeLayouts are the date formats accepted for from/until. The API documents RFC 3339, but
@@ -27,7 +27,8 @@ func registerCertificateTools(r *Registry) {
 		Definition: mcp.Tool{
 			Name: "query_certificates",
 			Description: "Read-only certificate list (certificate.query): name, type, common name, SANs, validity dates, " +
-				"days left until expiry and an expired flag. Certificate, private key and CSR contents are not returned",
+				"days left until expiry and an expired flag. Certificate, private key and CSR contents are not returned. " +
+				"is_ui_certificate marks the certificate the web UI uses, but only when the API key may read it: the read-only admin role receives a masked value, so the flag is then omitted",
 			InputSchema: map[string]interface{}{
 				"type":       "object",
 				"properties": map[string]interface{}{},
@@ -91,9 +92,41 @@ func handleQueryCertificates(client *truenas.Client, args map[string]interface{}
 	if err != nil {
 		return "", err
 	}
-	formatted, err := json.MarshalIndent(summarizeCertificates(certificates, time.Now()), "", "  ")
+	summary := summarizeCertificates(certificates, time.Now())
+	if uiID, ok := uiCertificateID(client); ok {
+		summary = markUICertificate(summary, uiID)
+	}
+	formatted, err := json.MarshalIndent(summary, "", "  ")
 	if err != nil {
 		return "", fmt.Errorf("failed to format certificates: %w", err)
 	}
 	return string(formatted), nil
+}
+
+// parseUICertificateID reads the ui_certificate value of system.general.config: a number, or an object with an id.
+// It reports false for null and for the masked string the read-only role receives.
+func parseUICertificateID(value interface{}) (int, bool) {
+	switch typed := value.(type) {
+	case float64:
+		return int(typed), true
+	case map[string]interface{}:
+		if id, ok := typed["id"].(float64); ok {
+			return int(id), true
+		}
+	}
+	return 0, false
+}
+
+// uiCertificateID returns the id of the certificate the web UI uses (system.general.config), or false
+// when the call fails or the value is unavailable to this API key.
+func uiCertificateID(client *truenas.Client) (int, bool) {
+	raw, err := client.Call("system.general.config")
+	if err != nil {
+		return 0, false
+	}
+	var config map[string]interface{}
+	if err := json.Unmarshal(raw, &config); err != nil {
+		return 0, false
+	}
+	return parseUICertificateID(config["ui_certificate"])
 }
