@@ -41,6 +41,7 @@ func (r *Registry) registerTools() {
 	registerNFSStatusTools(r)
 	registerISCSITools(r)
 	registerServiceTools(r)
+	registerInterfaceTools(r)
 	r.tools["system_info"] = Tool{
 		Definition: mcp.Tool{
 			Name:        "system_info",
