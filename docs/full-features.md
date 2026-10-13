@@ -52,6 +52,7 @@ This document provides a comprehensive list of all available MCP tools for TrueN
 - **get_nfs_status** - Read-only NFS server status (role `SHARING_NFS_READ`): nfsd thread count, protocols, bind addresses and the NFSv3/NFSv4 client lists from `nfs.config`, `nfs.get_nfs3_clients` and `nfs.get_nfs4_clients`. The client lists come from the server's mount records and can be incomplete
 - **query_iscsi** - Read-only iSCSI view from `iscsi.extent.query`, `iscsi.target.query` and `iscsi.targetextent.query`: each extent with its backing zvol or file, block size, enabled state and the targets and LUN ids presenting it. Serials, NAA identifiers and authentication details are not returned
 - **query_services** - Read-only service status from `service.query` (role `SERVICE_READ`): state, start-on-boot flag and process count per service. `running_only` limits it to running services
+- **query_interfaces** - Read-only network interfaces from `interface.query`: type, MTU, link state and IP addresses per interface, sorted by name
 
 ### Applications
 - **query_apps** - List installed applications with status and available updates
