@@ -63,6 +63,7 @@ This document provides a comprehensive list of all available MCP tools for TrueN
 - **query_certificates** - Read-only certificate list from `certificate.query`: name, type, common name, SANs, validity dates, `days_left` until expiry and an `expired` flag. Certificate, private key and CSR contents are not returned
 - **query_certificates** - Read-only certificate list from `certificate.query`: name, type, common name, SANs, validity dates, `days_left` until expiry and an `expired` flag. Certificate, private key and CSR contents are not returned
 - **query_zfs_resources** - Read-only ZFS dataset and zvol properties from `zfs.resource.query` (role `ZFS_RESOURCE_READ`) for the given `paths`: name, type and the requested `properties` (default sync, logbias, recordsize, compression, dedup, used, available) as parsed values. Children are not included. The API documents this method as deprecated for removal in v28
+- **get_disk_temperature_alerts** - Read-only disk temperature alerts from `disk.temperature_alerts` (role `REPORTING_READ`): level, alert class, text, dismissed state and last occurrence. `disks` limits the check; the default is every disk. An empty list means no disk is over its limit
 
 ### Applications
 - **query_apps** - List installed applications with status and available updates
