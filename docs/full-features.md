@@ -56,6 +56,7 @@ This document provides a comprehensive list of all available MCP tools for TrueN
 - **query_snapshot_tasks** - Read-only periodic snapshot tasks from `pool.snapshottask.query`: dataset, recursion, `minute hour dom month dow` schedule, retention and enabled state, for lining periodic I/O bursts up with snapshot schedules
 - **query_scheduled_jobs** - Read-only view of recurring jobs: cron jobs (`cronjob.query`) and replication tasks (`replication.query`) with their schedules. Cron commands and replication credentials are deliberately not returned
 - **get_iscsi_sessions** - Read-only active iSCSI sessions from `iscsi.global.sessions` (role `SHARING_ISCSI_GLOBAL_READ`): initiator IQN and address, target IQN, digests and the negotiated burst and segment limits. Authentication details are not returned
+- **query_audit** - Read-only audit log from `audit.query` (role `SYSTEM_AUDIT_READ`), newest first: timestamp, username, address, event and success. `service` selects MIDDLEWARE (default), SMB, SUDO or SYSTEM; `limit` defaults to 25 (maximum 200). Event payloads are deliberately not returned
 
 ### Applications
 - **query_apps** - List installed applications with status and available updates

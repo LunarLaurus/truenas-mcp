@@ -45,6 +45,7 @@ func (r *Registry) registerTools() {
 	registerSnapshotTaskTools(r)
 	registerScheduledJobTools(r)
 	registerISCSISessionTools(r)
+	registerAuditTools(r)
 	r.tools["system_info"] = Tool{
 		Definition: mcp.Tool{
 			Name:        "system_info",
