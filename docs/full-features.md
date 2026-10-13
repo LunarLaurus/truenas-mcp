@@ -49,6 +49,7 @@ This document provides a comprehensive list of all available MCP tools for TrueN
   - `full_series: true` returns every data point instead of the first and last 10 samples
 - **query_disks** - Read-only disk inventory from `disk.query`: name, model, serial, size, type, bus and pool membership
 - **get_disk_temperatures** - Read-only disk temperatures from `disk.temperatures` (role `REPORTING_READ`). Reads each disk directly, so it covers disks missing from the reporting graphs. `include_thresholds` adds the thresholds the disk reports; `days` adds min/max/avg from `disk.temperature_agg`
+- **get_nfs_status** - Read-only NFS server status (role `SHARING_NFS_READ`): nfsd thread count, protocols, bind addresses and the NFSv3/NFSv4 client lists from `nfs.config`, `nfs.get_nfs3_clients` and `nfs.get_nfs4_clients`. The client lists come from the server's mount records and can be incomplete
 
 ### Applications
 - **query_apps** - List installed applications with status and available updates
