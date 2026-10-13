@@ -50,6 +50,7 @@ func (r *Registry) registerTools() {
 	registerPoolAttachmentTools(r)
 	registerDatasetQuotaTools(r)
 	registerCertificateTools(r)
+	registerZFSResourceTools(r)
 	r.tools["system_info"] = Tool{
 		Definition: mcp.Tool{
 			Name:        "system_info",

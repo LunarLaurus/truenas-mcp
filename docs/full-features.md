@@ -62,6 +62,7 @@ This document provides a comprehensive list of all available MCP tools for TrueN
 - **get_dataset_quota** - Read-only dataset quotas from `pool.dataset.get_quota` (role `DATASET_READ`): used bytes, quota and object counts for the dataset itself (default `DATASET`) or per `USER`, `GROUP` or `PROJECT`
 - **query_certificates** - Read-only certificate list from `certificate.query`: name, type, common name, SANs, validity dates, `days_left` until expiry and an `expired` flag. Certificate, private key and CSR contents are not returned
 - **query_certificates** - Read-only certificate list from `certificate.query`: name, type, common name, SANs, validity dates, `days_left` until expiry and an `expired` flag. Certificate, private key and CSR contents are not returned
+- **query_zfs_resources** - Read-only ZFS dataset and zvol properties from `zfs.resource.query` (role `ZFS_RESOURCE_READ`) for the given `paths`: name, type and the requested `properties` (default sync, logbias, recordsize, compression, dedup, used, available) as parsed values. Children are not included. The API documents this method as deprecated for removal in v28
 
 ### Applications
 - **query_apps** - List installed applications with status and available updates
