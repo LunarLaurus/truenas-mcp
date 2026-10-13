@@ -48,6 +48,7 @@ This document provides a comprehensive list of all available MCP tools for TrueN
 - **get_disk_metrics** - Get disk I/O performance metrics
   - `full_series: true` returns every data point instead of the first and last 10 samples
 - **query_disks** - Read-only disk inventory from `disk.query`: name, model, serial, size, type, bus and pool membership
+- **get_disk_temperatures** - Read-only disk temperatures from `disk.temperatures` (role `REPORTING_READ`). Reads each disk directly, so it covers disks missing from the reporting graphs. `include_thresholds` adds the thresholds the disk reports; `days` adds min/max/avg from `disk.temperature_agg`
 
 ### Applications
 - **query_apps** - List installed applications with status and available updates

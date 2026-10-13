@@ -37,6 +37,7 @@ func NewRegistry(client *truenas.Client, taskManager *tasks.Manager) *Registry {
 func (r *Registry) registerTools() {
 	// System info tool
 	registerLocalDiskTools(r) // local addition: read-only disk inventory
+	registerDiskTemperatureTools(r)
 	r.tools["system_info"] = Tool{
 		Definition: mcp.Tool{
 			Name:        "system_info",
