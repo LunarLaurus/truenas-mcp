@@ -39,6 +39,7 @@ func (r *Registry) registerTools() {
 	registerLocalDiskTools(r) // local addition: read-only disk inventory
 	registerDiskTemperatureTools(r)
 	registerNFSStatusTools(r)
+	registerISCSITools(r)
 	r.tools["system_info"] = Tool{
 		Definition: mcp.Tool{
 			Name:        "system_info",
