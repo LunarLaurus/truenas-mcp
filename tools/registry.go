@@ -1095,19 +1095,9 @@ For IPA: {hostname: "ipa.example.com", domain: "example.com", ...}
 						"type": "array",
 						"items": map[string]interface{}{
 							"type": "string",
-							"enum": []string{
-								"arcfreememory", "arcavailablememory", "arcsize",
-								"demandaccessespersecond", "demanddataaccessespersecond", "demandmetadataaccessespersecond",
-								"demanddatahitspersecond", "demanddataiohitspersecond", "demanddatamissespersecond",
-								"demanddatahitpercentage", "demanddataiohitpercentage", "demanddatamisspercentage",
-								"demandmetadatahitspersecond", "demandmetadataiohitspersecond", "demandmetadatamissespersecond",
-								"demandmetadatahitpercentage", "demandmetadataiohitpercentage", "demandmetadatamisspercentage",
-								"l2archhitspersecond", "l2arcmissespersecond", "totall2arcaccessespersecond",
-								"l2architpercentage", "l2arcmisspercentage",
-								"l2arcbytesreadpersecond", "l2arcbyteswrittenpersecond",
-							},
+							"enum": arcGraphNames,
 						},
-						"description": "ARC metrics to retrieve (default: arcfreememory, arcavailablememory, arcsize)",
+						"description": "ARC metrics to retrieve (default: arcsize, arcrate, arcresult)",
 					},
 					"unit": map[string]interface{}{
 						"type":    "string",
@@ -3204,6 +3194,12 @@ func handleGetDiskMetrics(client *truenas.Client, args map[string]interface{}) (
 	return string(formatted), nil
 }
 
+// arcGraphNames is the set of ARC graph names reporting.get_data accepts on TrueNAS 25.10 (Goldeye).
+var arcGraphNames = []string{"arcactualrate", "arcrate", "arcsize", "arcresult"}
+
+// defaultArcGraphs are queried when the caller does not name any graphs.
+var defaultArcGraphs = []string{"arcsize", "arcrate", "arcresult"}
+
 func handleGetArcMetrics(client *truenas.Client, args map[string]interface{}) (string, error) {
 	unit := "HOUR"
 	if u, ok := args["unit"].(string); ok && u != "" {
@@ -3211,7 +3207,7 @@ func handleGetArcMetrics(client *truenas.Client, args map[string]interface{}) (s
 	}
 
 	// Default graphs if not specified
-	graphs := []string{"arcfreememory", "arcavailablememory", "arcsize"}
+	graphs := defaultArcGraphs
 	if g, ok := args["graphs"].([]interface{}); ok && len(g) > 0 {
 		graphs = make([]string, len(g))
 		for i, v := range g {
