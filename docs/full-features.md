@@ -67,6 +67,8 @@ This document provides a comprehensive list of all available MCP tools for TrueN
 - **get_ipmi_chassis** - Read-only IPMI chassis status from `ipmi.chassis.info` (role `IPMI_READ`): power state, faults, intrusion and identify state. Systems without a BMC return a short "IPMI not available" message instead of an error
 - **get_pool_health** - Compact pool health from `pool.query`: status, used percent, fragmentation, dedup table size, last scrub or resilver, per-vdev read/write/checksum errors, and whether the pool has a dedicated log (SLOG), cache, special or dedup vdev. `query_pools` returns the full raw objects
 - **query_reporting_exporters** - Read-only reporting exporters (`reporting.exporters.query`, role `REPORTING_READ`): name, enabled, type and destination. Exporter attributes are not returned because they can hold credentials
+- **get_disk_usage** - Read-only disk inventory from `disk.details`: name, model, size, type, bus, RPM, enclosure slot, the imported pool the disk belongs to (or an exported pool it was last part of) and an `in_use` flag, so unused disks are easy to spot. `type` limits it to USED, UNUSED or BOTH. Serials, passwords and key identifiers are not returned
+- **query_users** - Read-only account audit from `user.query`: username, uid, built-in, locked, SMB, SSH password login and whether the account has sudo rights. Password hashes, SSH keys and other credential fields are never returned
 
 ### Applications
 - **query_apps** - List installed applications with status and available updates

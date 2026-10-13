@@ -55,6 +55,8 @@ func (r *Registry) registerTools() {
 	registerIPMITools(r)
 	registerPoolHealthTools(r)
 	registerReportingExporterTools(r)
+	registerDiskDetailTools(r)
+	registerUserTools(r)
 	r.tools["system_info"] = Tool{
 		Definition: mcp.Tool{
 			Name:        "system_info",
