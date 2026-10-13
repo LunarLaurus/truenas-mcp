@@ -2102,7 +2102,7 @@ func handleQueryDatasets(client *truenas.Client, args map[string]interface{}) (s
 
 // datasetTuningFields maps the summary key to the pool.dataset.query property that holds it.
 var datasetTuningFields = map[string]string{
-	"recordsize":          "recordsize",
+	"recordsize":           "recordsize",
 	"volblocksize":         "volblocksize",
 	"sync":                 "sync",
 	"atime":                "atime",
