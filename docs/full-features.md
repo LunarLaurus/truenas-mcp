@@ -59,6 +59,7 @@ This document provides a comprehensive list of all available MCP tools for TrueN
 - **query_audit** - Read-only audit log from `audit.query` (role `SYSTEM_AUDIT_READ`), newest first: timestamp, username, address, event and success. `service` selects MIDDLEWARE (default), SMB, SUDO or SYSTEM; `limit` defaults to 25 (maximum 200). Event payloads are deliberately not returned
 - **get_pool_processes** - Read-only list of processes using a pool from `pool.processes` (role `POOL_READ`), selected by pool name: pid, name, owning service and the command line cut to 120 characters
 - **get_pool_attachments** - Read-only list of what is attached to a pool from `pool.attachments` (role `POOL_READ`), selected by pool name: attachment type, owning service and the paths or identifiers involved
+- **get_dataset_quota** - Read-only dataset quotas from `pool.dataset.get_quota` (role `DATASET_READ`): used bytes, quota and object counts for the dataset itself (default `DATASET`) or per `USER`, `GROUP` or `PROJECT`
 
 ### Applications
 - **query_apps** - List installed applications with status and available updates
