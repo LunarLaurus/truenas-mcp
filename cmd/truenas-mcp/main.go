@@ -24,6 +24,7 @@ var (
 	tlsCA      = flag.String("tls-ca", "", "Path to a PEM certificate to trust (e.g., the TrueNAS self-signed certificate)")
 	versionFlg = flag.Bool("version", false, "Print version and exit")
 	debug      = flag.Bool("debug", false, "Enable debug logging")
+	readOnly   = flag.Bool("read-only", false, "Hide and refuse every tool that changes state (also TRUENAS_READ_ONLY=1)")
 )
 
 // Version is the release version, injected at build time via
@@ -75,6 +76,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to configure TLS: %v", err)
 	}
+	// TRUENAS_TLS_SERVER_NAME: verify a pinned certificate under its own name when the
+	// stock TrueNAS certificate (SAN "localhost") is reached by another hostname.
+	if name := os.Getenv("TRUENAS_TLS_SERVER_NAME"); name != "" && !*insecure {
+		tlsConfig.ServerName = name
+	}
 	if *insecure {
 		log.Println("WARNING: TLS certificate verification disabled - the connection is vulnerable to man-in-the-middle attacks; prefer --tls-ca with the server's certificate")
 	}
@@ -104,6 +110,17 @@ func main() {
 
 	// Create tool registry
 	registry := tools.NewRegistry(client, taskManager)
+	if !*readOnly {
+		switch strings.ToLower(os.Getenv("TRUENAS_READ_ONLY")) {
+		case "", "0", "false", "no", "off":
+		default:
+			*readOnly = true
+		}
+	}
+	registry.SetReadOnly(*readOnly)
+	if *readOnly {
+		log.Println("Read-only mode: mutating tools are hidden and refused")
+	}
 
 	// Start stdio handler
 	handler := NewStdioHandler(registry, *debug)

@@ -16,6 +16,7 @@ type Registry struct {
 	client      *truenas.Client
 	taskManager *tasks.Manager
 	tools       map[string]Tool
+	readOnly    bool
 }
 
 type Tool struct {
@@ -35,6 +36,27 @@ func NewRegistry(client *truenas.Client, taskManager *tasks.Manager) *Registry {
 
 func (r *Registry) registerTools() {
 	// System info tool
+	registerLocalDiskTools(r)
+	registerDiskTemperatureTools(r)
+	registerNFSStatusTools(r)
+	registerISCSITools(r)
+	registerServiceTools(r)
+	registerInterfaceTools(r)
+	registerSnapshotTaskTools(r)
+	registerScheduledJobTools(r)
+	registerISCSISessionTools(r)
+	registerAuditTools(r)
+	registerPoolProcessTools(r)
+	registerPoolAttachmentTools(r)
+	registerDatasetQuotaTools(r)
+	registerCertificateTools(r)
+	registerZFSResourceTools(r)
+	registerDiskTemperatureAlertTools(r)
+	registerIPMITools(r)
+	registerPoolHealthTools(r)
+	registerReportingExporterTools(r)
+	registerDiskDetailTools(r)
+	registerUserTools(r)
 	r.tools["system_info"] = Tool{
 		Definition: mcp.Tool{
 			Name:        "system_info",
@@ -1069,6 +1091,7 @@ For IPA: {hostname: "ipa.example.com", domain: "example.com", ...}
 						"description": "Metric type: disk I/O or disk temperature (default: disk)",
 						"default":     "disk",
 					},
+					"full_series": map[string]interface{}{"type": "boolean", "description": "Return every data point instead of the first and last 10"},
 					"unit": map[string]interface{}{
 						"type":        "string",
 						"enum":        []string{"HOUR", "DAY", "WEEK", "MONTH", "YEAR"},
@@ -1093,19 +1116,9 @@ For IPA: {hostname: "ipa.example.com", domain: "example.com", ...}
 						"type": "array",
 						"items": map[string]interface{}{
 							"type": "string",
-							"enum": []string{
-								"arcfreememory", "arcavailablememory", "arcsize",
-								"demandaccessespersecond", "demanddataaccessespersecond", "demandmetadataaccessespersecond",
-								"demanddatahitspersecond", "demanddataiohitspersecond", "demanddatamissespersecond",
-								"demanddatahitpercentage", "demanddataiohitpercentage", "demanddatamisspercentage",
-								"demandmetadatahitspersecond", "demandmetadataiohitspersecond", "demandmetadatamissespersecond",
-								"demandmetadatahitpercentage", "demandmetadataiohitpercentage", "demandmetadatamisspercentage",
-								"l2archhitspersecond", "l2arcmissespersecond", "totall2arcaccessespersecond",
-								"l2architpercentage", "l2arcmisspercentage",
-								"l2arcbytesreadpersecond", "l2arcbyteswrittenpersecond",
-							},
+							"enum": arcGraphNames,
 						},
-						"description": "ARC metrics to retrieve (default: arcfreememory, arcavailablememory, arcsize)",
+						"description": "ARC metrics to retrieve (default: arcsize, arcrate, arcresult)",
 					},
 					"unit": map[string]interface{}{
 						"type":    "string",
@@ -1771,7 +1784,10 @@ Returns task_id for tracking progress with tasks_get.
 
 func (r *Registry) ListTools() []mcp.Tool {
 	tools := make([]mcp.Tool, 0, len(r.tools))
-	for _, tool := range r.tools {
+	for name, tool := range r.tools {
+		if r.readOnly && !readOnlyTools[name] {
+			continue
+		}
 		tools = append(tools, tool.Definition)
 	}
 	return tools
@@ -1781,6 +1797,10 @@ func (r *Registry) CallTool(name string, args map[string]interface{}) (string, e
 	tool, exists := r.tools[name]
 	if !exists {
 		return "", fmt.Errorf("unknown tool: %s", name)
+	}
+
+	if err := r.refuseIfReadOnly(name); err != nil {
+		return "", err
 	}
 
 	return tool.Handler(r.client, args)
@@ -2096,6 +2116,17 @@ func handleQueryDatasets(client *truenas.Client, args map[string]interface{}) (s
 	return string(formatted), nil
 }
 
+// datasetTuningFields maps the summary key to the pool.dataset.query property that holds it.
+var datasetTuningFields = map[string]string{
+	"recordsize":           "recordsize",
+	"volblocksize":         "volblocksize",
+	"sync":                 "sync",
+	"atime":                "atime",
+	"primarycache":         "primarycache",
+	"special_small_blocks": "special_small_block_size",
+	"copies":               "copies",
+}
+
 // simplifyDataset extracts the most relevant fields from a raw dataset object
 func simplifyDataset(ds map[string]interface{}) map[string]interface{} {
 	summary := map[string]interface{}{
@@ -2165,6 +2196,13 @@ func simplifyDataset(ds map[string]interface{}) map[string]interface{} {
 	if dedup := getParsed(ds["deduplication"]); dedup != nil {
 		if dedupStr, ok := dedup.(string); ok && dedupStr != "off" {
 			summary["deduplication"] = dedup
+		}
+	}
+
+	// I/O tuning properties (write-latency diagnosis: block size, sync policy, caching)
+	for key, field := range datasetTuningFields {
+		if val := getValue(ds[field]); val != nil {
+			summary[key] = val
 		}
 	}
 
@@ -3143,7 +3181,10 @@ func handleGetDiskMetrics(client *truenas.Client, args map[string]interface{}) (
 					// Include sample: first 10 and last 10 data points
 					if dataArray, ok := value.([]interface{}); ok {
 						summary["data_points_total"] = len(dataArray)
-						if len(dataArray) > 0 {
+						// full_series=true returns every sample instead of the first and last 10.
+						if full, _ := args["full_series"].(bool); full {
+							summary["data"] = dataArray
+						} else if len(dataArray) > 0 {
 							sample := make([]interface{}, 0)
 
 							for i := 0; i < 10 && i < len(dataArray); i++ {
@@ -3181,6 +3222,12 @@ func handleGetDiskMetrics(client *truenas.Client, args map[string]interface{}) (
 	return string(formatted), nil
 }
 
+// arcGraphNames is the set of ARC graph names reporting.get_data accepts on TrueNAS 25.10 (Goldeye).
+var arcGraphNames = []string{"arcactualrate", "arcrate", "arcsize", "arcresult"}
+
+// defaultArcGraphs are queried when the caller does not name any graphs.
+var defaultArcGraphs = []string{"arcsize", "arcrate", "arcresult"}
+
 func handleGetArcMetrics(client *truenas.Client, args map[string]interface{}) (string, error) {
 	unit := "HOUR"
 	if u, ok := args["unit"].(string); ok && u != "" {
@@ -3188,7 +3235,7 @@ func handleGetArcMetrics(client *truenas.Client, args map[string]interface{}) (s
 	}
 
 	// Default graphs if not specified
-	graphs := []string{"arcfreememory", "arcavailablememory", "arcsize"}
+	graphs := defaultArcGraphs
 	if g, ok := args["graphs"].([]interface{}); ok && len(g) > 0 {
 		graphs = make([]string, len(g))
 		for i, v := range g {

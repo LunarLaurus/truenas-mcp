@@ -267,7 +267,9 @@ You should now be able to ask TrueNAS questions:
   - ⚠️ **Note**: `ws://` (unencrypted) is **not allowed** - TrueNAS will revoke API keys used over unencrypted connections
 - `--api-key` - TrueNAS API key for authentication (required, or use `TRUENAS_API_KEY` env var)
 - `--tls-ca` - Path to a PEM certificate to trust, e.g. the TrueNAS self-signed certificate (or use `TRUENAS_TLS_CA` env var)
+- `TRUENAS_TLS_SERVER_NAME` env var - TLS server name to verify the certificate against. The stock TrueNAS certificate is issued to `localhost`, so when you pin it with `--tls-ca` and connect by another hostname, set this to `localhost`. Ignored with `--insecure`.
 - `--insecure` - Disable TLS certificate verification entirely (or set `TRUENAS_INSECURE=1`) - **unsafe**: allows man-in-the-middle attacks; prefer `--tls-ca`
+- `--read-only` - Expose only the read-only tools (or set `TRUENAS_READ_ONLY=1`). It is default-deny: only tools listed in `readOnlyTools` in `tools/readonly.go` are exposed, so a tool nobody classified stays hidden and is refused. Tests require every tool to be classified and every write API method to have an owning tool in `mutatingTools`. This is a second guard on top of the API key role, not a replacement for it.
 - `--debug` - Enable debug logging (or set `TRUENAS_MCP_DEBUG=1`)
 - `--version` - Print version and exit
 
