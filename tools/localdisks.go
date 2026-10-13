@@ -9,13 +9,14 @@ import (
 	"github.com/truenas/truenas-mcp/truenas"
 )
 
-// Local addition: read-only disk inventory via disk.query (identity, bus,
-// SMART capability, pool membership). Credentials-like fields are dropped.
+// registerLocalDiskTools registers query_disks: a read-only disk inventory via disk.query (model, size,
+// type, bus, pool membership). Serial numbers, LUN identifiers and credential-like fields are omitted,
+// matching get_disk_usage.
 func registerLocalDiskTools(r *Registry) {
 	r.tools["query_disks"] = Tool{
 		Definition: mcp.Tool{
 			Name:        "query_disks",
-			Description: "Read-only disk inventory from disk.query: name, model, serial, size, type, bus, SMART capability and pool membership (local addition)",
+			Description: "Read-only disk inventory from disk.query: name, model, size, type, bus and pool membership. Serial numbers and identifiers are not returned",
 			InputSchema: map[string]interface{}{
 				"type": "object",
 				"properties": map[string]interface{}{
@@ -42,24 +43,36 @@ func handleQueryDisks(client *truenas.Client, args map[string]interface{}) (stri
 		return "", fmt.Errorf("failed to parse disks: %w", err)
 	}
 	want, _ := args["pool"].(string)
-	out := make([]map[string]interface{}, 0, len(disks))
-	for _, d := range disks {
-		if want != "" {
-			if p, _ := d["pool"].(string); p != want {
-				continue
-			}
-		}
-		for k := range d {
-			lk := strings.ToLower(k)
-			if strings.Contains(lk, "passw") || strings.Contains(lk, "secret") || strings.Contains(lk, "token") {
-				delete(d, k)
-			}
-		}
-		out = append(out, d)
-	}
+	out := sanitizeDisks(disks, want)
 	b, err := json.MarshalIndent(out, "", "  ")
 	if err != nil {
 		return "", err
 	}
 	return string(b), nil
+}
+
+// diskIdentityFields are disk.query fields that identify a physical device or its keys. They are never returned.
+var diskIdentityFields = map[string]bool{
+	"serial": true, "serial_lunid": true, "lunid": true, "ident": true, "identifier": true, "kmip_uid": true,
+}
+
+// sanitizeDisks drops identity and credential-like fields from every disk and keeps only the disks in pool
+// when pool is not empty.
+func sanitizeDisks(disks []map[string]interface{}, pool string) []map[string]interface{} {
+	out := make([]map[string]interface{}, 0, len(disks))
+	for _, d := range disks {
+		if pool != "" {
+			if p, _ := d["pool"].(string); p != pool {
+				continue
+			}
+		}
+		for k := range d {
+			lk := strings.ToLower(k)
+			if diskIdentityFields[lk] || strings.Contains(lk, "passw") || strings.Contains(lk, "secret") || strings.Contains(lk, "token") {
+				delete(d, k)
+			}
+		}
+		out = append(out, d)
+	}
+	return out
 }

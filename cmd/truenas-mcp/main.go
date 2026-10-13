@@ -76,7 +76,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to configure TLS: %v", err)
 	}
-	// Local patch: verify a pinned certificate under its own name when the
+	// TRUENAS_TLS_SERVER_NAME: verify a pinned certificate under its own name when the
 	// stock TrueNAS certificate (SAN "localhost") is reached by another hostname.
 	if name := os.Getenv("TRUENAS_TLS_SERVER_NAME"); name != "" && !*insecure {
 		tlsConfig.ServerName = name
